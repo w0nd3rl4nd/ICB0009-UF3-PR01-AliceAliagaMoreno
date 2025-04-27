@@ -25,7 +25,7 @@ namespace Client
                 NetworkStream ns = client.GetStream();
 
                 // Send message to server
-                NetworkStreamClass.EscribirMensajeNetworkStream(ns, "Hello server, I'm a client");
+                NetworkStreamClass.EscribirMensajeNetworkStream(ns, "Hello Server, ack");
 
                 // Receive response
                 string respuesta = NetworkStreamClass.LeerMensajeNetworkStream(ns);

@@ -12,6 +12,8 @@ namespace Servidor
 {
     class Program
     {
+        static int nextId = 1; // ID for each vehicle
+        static readonly object idLock = new object();  // Object to lock ID access
         static void Main(string[] args)
         {
             Console.WriteLine("[Servidor] Loading...");
@@ -38,14 +40,34 @@ namespace Servidor
             {
                 Console.WriteLine("[Servidor] Managing new vehicle...");
 
+                int vehicleId;
+                string bearing;
+
+                lock (idLock)
+                {
+                    vehicleId = nextId++;
+                    bearing = (new Random().Next(0, 2) == 0) ? "North" : "South";
+                }
+
+                Console.WriteLine($"[Servidor] Vehicle with ID {vehicleId} is assigned {bearing} direction");
+
+                Vehiculo vehiculo = new Vehiculo
+                {
+                    Id = vehicleId,
+                    Direccion = bearing
+                };
+
                 NetworkStream ns = client.GetStream();
+
+                // Send the ID to the client as a handshake
+                NetworkStreamClass.EscribirMensajeNetworkStream(ns, $"ID: {vehicleId}, Direction: {bearing}");
 
                 // Get a message
                 string message = NetworkStreamClass.LeerMensajeNetworkStream(ns);
                 Console.WriteLine($"[Servidor] Received message: {message}");
 
                 // Send a response
-                NetworkStreamClass.EscribirMensajeNetworkStream(ns, "Hello client, connection ack");
+                NetworkStreamClass.EscribirMensajeNetworkStream(ns, "ID and direction assigned succesfully");
 
                 // Close the connection when done.
                 ns.Close();
