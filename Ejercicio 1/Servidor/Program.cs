@@ -14,7 +14,7 @@ namespace Servidor
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("[Servidor] Arrancando...");
+            Console.WriteLine("[Servidor] Loading...");
 
             // Listen on 5000
             TcpListener server = new TcpListener(IPAddress.Any, 5000);
@@ -26,8 +26,8 @@ namespace Servidor
                 TcpClient client = server.AcceptTcpClient();
                 Console.WriteLine("[Servidor] Client connected");
 
-                // Create a thread to manage the client
-                Thread clienteThread = new Thread(() => ManejarCliente(client));
+                // Start a new thread for each client
+                Thread clienteThread = new(() => ManejarCliente(client));
                 clienteThread.Start();
             }
         }
@@ -36,6 +36,8 @@ namespace Servidor
         {
             try
             {
+                Console.WriteLine("[Servidor] Managing new vehicle...");
+
                 NetworkStream ns = client.GetStream();
 
                 // Get a message
@@ -44,6 +46,10 @@ namespace Servidor
 
                 // Send a response
                 NetworkStreamClass.EscribirMensajeNetworkStream(ns, "Hello client, connection ack");
+
+                // Close the connection when done.
+                ns.Close();
+                client.Close();
             }
             catch (Exception ex)
             {
