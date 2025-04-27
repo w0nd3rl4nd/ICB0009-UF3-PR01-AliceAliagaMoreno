@@ -22,6 +22,7 @@ namespace Client
                 client.Connect("127.0.0.1", 5000); // Connect to local server
                 Console.WriteLine("[Cliente] Connecting to the server...");
 
+                // I am already getting the network stream lol
                 NetworkStream ns = client.GetStream();
 
                 // Send message to server

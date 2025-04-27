@@ -57,6 +57,7 @@ namespace Servidor
                     Direccion = bearing
                 };
 
+                // I am already getting the network stream lol
                 NetworkStream ns = client.GetStream();
 
                 // Send the ID to the client as a handshake
