@@ -37,18 +37,26 @@ namespace NetworkStreamNS
         }*/
 
         //Método que permite leer un mensaje de tipo texto (string) de un NetworkStream
-        public static string LeerMensajeNetworkStream (NetworkStream NS)
+        public static string LeerMensajeNetworkStream(NetworkStream NS)
         {
             byte[] bufferLectura = new byte[1024];
+            int bytesLeidos = 0;
+
             using (MemoryStream tmpStream = new MemoryStream())
             {
-                int bytesLeidos;
-                while ((bytesLeidos = NS.Read(bufferLectura, 0, bufferLectura.Length)) > 0)
+                int bytes = NS.Read(bufferLectura, 0, bufferLectura.Length);
+                tmpStream.Write(bufferLectura, 0, bytes);
+                bytesLeidos += bytes;
+
+                while (NS.DataAvailable)
                 {
-                    tmpStream.Write(bufferLectura, 0, bytesLeidos);
+                    bytes = NS.Read(bufferLectura, 0, bufferLectura.Length);
+                    tmpStream.Write(bufferLectura, 0, bytes);
+                    bytesLeidos += bytes;
                 }
-                return Encoding.Unicode.GetString(tmpStream.ToArray());
-            }           
+
+                return Encoding.Unicode.GetString(tmpStream.ToArray(), 0, bytesLeidos);
+            }
         }
 
         //Método que permite escribir un mensaje de tipo texto (string) al NetworkStream

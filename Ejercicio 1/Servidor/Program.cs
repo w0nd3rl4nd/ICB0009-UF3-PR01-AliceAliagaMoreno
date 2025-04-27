@@ -60,15 +60,22 @@ namespace Servidor
                 // I am already getting the network stream lol
                 NetworkStream ns = client.GetStream();
 
-                // Send the ID to the client as a handshake
-                NetworkStreamClass.EscribirMensajeNetworkStream(ns, $"ID: {vehicleId}, Direction: {bearing}");
+                // 1) Read INIT from client
+                string init = NetworkStreamClass.LeerMensajeNetworkStream(ns);
+                Console.WriteLine($"[Servidor] Handshake received: {init}");
 
-                // Get a message
-                string message = NetworkStreamClass.LeerMensajeNetworkStream(ns);
-                Console.WriteLine($"[Servidor] Received message: {message}");
+                // 2) Send ID and bearing
+                string handshakeData = $"ID:{vehicleId}, Bearing:{bearing}";
+                NetworkStreamClass.EscribirMensajeNetworkStream(ns, handshakeData);
+                Console.WriteLine($"[Servidor] Sent handshake data: {handshakeData}");
 
-                // Send a response
-                NetworkStreamClass.EscribirMensajeNetworkStream(ns, "ID and direction assigned succesfully");
+                // 3) Reac ACK from client (message readback)
+                string confirm = NetworkStreamClass.LeerMensajeNetworkStream(ns);
+                Console.WriteLine($"[Servidor] Handshake confirmation: {confirm}");
+
+                // 4) Send final ACK
+                NetworkStreamClass.EscribirMensajeNetworkStream(ns, "HANDSHAKE_COMPLETED");
+                Console.WriteLine("[Servidor] Handshake completed");
 
                 // Close the connection when done.
                 ns.Close();

@@ -25,12 +25,21 @@ namespace Client
                 // I am already getting the network stream lol
                 NetworkStream ns = client.GetStream();
 
-                // Send message to server
-                NetworkStreamClass.EscribirMensajeNetworkStream(ns, "Hello Server, ack");
+                // 1) Send "INIT" to begin connection
+                NetworkStreamClass.EscribirMensajeNetworkStream(ns, "INIT");
+                Console.WriteLine("[Cliente] Sent handshake initiation");
 
-                // Receive response
-                string respuesta = NetworkStreamClass.LeerMensajeNetworkStream(ns);
-                Console.WriteLine($"[Cliente] Response from server: {respuesta}");
+                // 2) Read answer (ID and Bearing)
+                string serverData = NetworkStreamClass.LeerMensajeNetworkStream(ns);
+                Console.WriteLine($"[Cliente] Received handshake data: {serverData}");
+
+                // 3) Resend confirmation (readback)
+                NetworkStreamClass.EscribirMensajeNetworkStream(ns, serverData);
+                Console.WriteLine($"[Cliente] Sent handshake confirmation: {serverData}");
+
+                // 4) Read final ACK
+                string finalAck = NetworkStreamClass.LeerMensajeNetworkStream(ns);
+                Console.WriteLine($"[Cliente] Handshake completed: {finalAck}");
 
                 ns.Close();
                 client.Close();
