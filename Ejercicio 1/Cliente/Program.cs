@@ -14,6 +14,7 @@ namespace Client
     {
         static void Main(string[] args)
         {
+            Console.Clear();
             Console.WriteLine("[Cliente] Initialising connection...");
 
             try

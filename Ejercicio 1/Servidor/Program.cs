@@ -18,6 +18,7 @@ namespace Servidor
         static readonly object clientesLock = new object();
         static void Main(string[] args)
         {
+            Console.Clear();
             Console.WriteLine("[Servidor] Loading...");
 
             // Listen on 5000
