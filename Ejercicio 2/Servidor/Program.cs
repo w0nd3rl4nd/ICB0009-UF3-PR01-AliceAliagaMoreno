@@ -16,6 +16,8 @@ namespace Servidor
         static readonly object idLock = new object();  // Object to lock ID access
         static List<Cliente> connectedClients = new List<Cliente>();
         static readonly object clientesLock = new object();
+        static Carretera carretera = new Carretera();  // Global Carretera object
+
         static void Main(string[] args)
         {
             Console.Clear();
@@ -40,13 +42,11 @@ namespace Servidor
         static void ManejarCliente(TcpClient client)
         {
             int vehicleId = 0;
+            string bearing = "";
 
             try
             {
                 Console.WriteLine("[Servidor] Managing new vehicle...");
-
-                
-                string bearing;
 
                 lock (idLock)
                 {
@@ -56,16 +56,8 @@ namespace Servidor
 
                 Console.WriteLine($"[Servidor] Vehicle with ID {vehicleId} is assigned {bearing} direction");
 
-                Vehiculo vehiculo = new Vehiculo
-                {
-                    Id = vehicleId,
-                    Direccion = bearing
-                };
-
-                // I am already getting the network stream lol
-                NetworkStream ns = client.GetStream();
-
                 // 1) Read INIT from client
+                NetworkStream ns = client.GetStream();
                 string init = NetworkStreamClass.LeerMensajeNetworkStream(ns);
                 Console.WriteLine($"[Servidor] Handshake received: {init}");
 
@@ -74,7 +66,7 @@ namespace Servidor
                 NetworkStreamClass.EscribirMensajeNetworkStream(ns, handshakeData);
                 Console.WriteLine($"[Servidor] Sent handshake data: {handshakeData}");
 
-                // 3) Reac ACK from client (message readback)
+                // 3) Read ACK from client (message readback)
                 string confirm = NetworkStreamClass.LeerMensajeNetworkStream(ns);
                 Console.WriteLine($"[Servidor] Handshake confirmation: {confirm}");
 
@@ -82,26 +74,24 @@ namespace Servidor
                 NetworkStreamClass.EscribirMensajeNetworkStream(ns, "HANDSHAKE_COMPLETED");
                 Console.WriteLine("[Servidor] Handshake completed");
 
-                var newCLient = new Cliente {
-                    Id       = vehicleId,
-                    Stream   = ns,
-                    TcpClient= client
-                };
+                // 5) Receive the new vehicle from client
+                Vehiculo vehiculo = NetworkStreamClass.LeerDatosVehiculoNS(ns);
+                Console.WriteLine($"[Servidor] Received Vehiculo with ID {vehiculo.Id}, Bearing {vehiculo.Direccion}");
 
-                lock (clientesLock)
-                {
-                    connectedClients.Add(new Cliente { Id = vehicleId, Stream = ns, TcpClient = client });
-                    Console.WriteLine($"[Servidor] Connected clients: {connectedClients.Count}");
-                }
+                // Add the received vehicle to the carretera
+                carretera.AñadirVehiculo(vehiculo);
+                Console.WriteLine("[Servidor] Vehicle added to the carretera.");
 
-                // Detectar desconexión
+                // Display all vehicles in the carretera
+                carretera.MostrarBicicletas();
+
+                // Clean up
                 var socket = client.Client;
                 try
                 {
-                    // Bucle que comprueba cada segundo si el peer ha cerrado
+                    // Detect disconnection
                     while (true)
                     {
-                        // SelectRead + Available==0 => FIN recibido
                         if (socket.Poll(0, SelectMode.SelectRead) && socket.Available == 0)
                             break;
                         Thread.Sleep(1000);
@@ -109,18 +99,14 @@ namespace Servidor
                 }
                 finally
                 {
-                    // Al salir del bucle, realmente se desconectó
-                    lock (clientesLock)
-                    {
-                        connectedClients.RemoveAll(c => c.Id == vehicleId);
-                        Console.WriteLine($"[Servidor] Client {vehicleId} disconnected. Remaining {connectedClients.Count}");
-                    }
                     ns.Close();
                     client.Close();
+                    Console.WriteLine("[Servidor] Client disconnected.");
                 }
-            
-            } catch (Exception ex) {
-                Console.WriteLine($"[Servidor] Error in client {vehicleId}: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Servidor] Error: {ex.Message}");
             }
         }
     }

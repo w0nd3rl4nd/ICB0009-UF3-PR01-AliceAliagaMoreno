@@ -4,7 +4,7 @@ using System.Text;
 using System.IO;
 using VehiculoClass;
 using CarreteraClass;
-
+using System.Text.Json;
 
 namespace NetworkStreamNS
 {
@@ -12,20 +12,19 @@ namespace NetworkStreamNS
     {
         
         //Método para escribir en un NetworkStream los datos de tipo Carretera
-        public static void  EscribirDatosCarreteraNS(NetworkStream NS, Carretera C)
+        public static void EscribirDatosCarreteraNS(NetworkStream NS, Carretera C)
         {
-            BinaryFormatter bf = new BinaryFormatter(); // Create a BinaryFormatter to serialize the object
-            MemoryStream ms = new MemoryStream(); // Create a MemoryStream to hold serialized data
-            bf.Serialize(ms, C); // Serialize the Carretera object into the MemoryStream
-            byte[] datos = ms.ToArray(); // Convert the MemoryStream to a byte array
+            // Use JsonSerializer to serialize the object to a JSON string
+            string json = JsonSerializer.Serialize(C);
+            byte[] datos = Encoding.UTF8.GetBytes(json); // Convert the JSON string to a byte array
             int longitud = datos.Length; // Get the length of the byte array
 
             EscribirMensajeNetworkStream(NS, longitud.ToString()); // Write the length to the NetworkStream first
             NS.Write(datos, 0, datos.Length); // Write the actual serialized data to the NetworkStream
         }
 
-        //Metódo para leer de un NetworkStream los datos que de un objeto Carretera
-        public static Carretera LeerDatosCarreteraNS (NetworkStream NS)
+        //Método para leer de un NetworkStream los datos que de un objeto Carretera
+        public static Carretera LeerDatosCarreteraNS(NetworkStream NS)
         {
             string longitudStr = LeerMensajeNetworkStream(NS); // Read the length of the incoming data
             int longitud = int.Parse(longitudStr); // Parse the length into an integer
@@ -39,28 +38,26 @@ namespace NetworkStreamNS
                 totalLeido += leido; // Update the total number of bytes read
             }
 
-            MemoryStream ms = new MemoryStream(datos); // Create a MemoryStream with the read data
-            BinaryFormatter bf = new BinaryFormatter(); // Create a BinaryFormatter to deserialize the data
-            Carretera carretera = (Carretera)bf.Deserialize(ms); // Deserialize the MemoryStream back into a Carretera object
+            string json = Encoding.UTF8.GetString(datos); // Convert the byte array to a JSON string
+            Carretera carretera = JsonSerializer.Deserialize<Carretera>(json); // Deserialize the JSON string into a Carretera object
 
             return carretera; // Return the deserialized Carretera object
         }
 
         //Método para enviar datos de tipo Vehiculo en un NetworkStream
-        public static void  EscribirDatosVehiculoNS(NetworkStream NS, Vehiculo V)
+        public static void EscribirDatosVehiculoNS(NetworkStream NS, Vehiculo V)
         {
-            BinaryFormatter bf = new BinaryFormatter(); // Create a BinaryFormatter to serialize the object
-            MemoryStream ms = new MemoryStream(); // Create a MemoryStream to hold serialized data
-            bf.Serialize(ms, V); // Serialize the Vehiculo object into the MemoryStream
-            byte[] datos = ms.ToArray(); // Convert the MemoryStream to a byte array
+            // Use JsonSerializer to serialize the object to a JSON string
+            string json = JsonSerializer.Serialize(V);
+            byte[] datos = Encoding.UTF8.GetBytes(json); // Convert the JSON string to a byte array
             int longitud = datos.Length; // Get the length of the byte array
 
             EscribirMensajeNetworkStream(NS, longitud.ToString()); // Write the length to the NetworkStream first
             NS.Write(datos, 0, datos.Length); // Write the actual serialized data to the NetworkStream
         }
 
-        //Metódo para leer de un NetworkStream los datos que de un objeto Vehiculo
-        public static Vehiculo LeerDatosVehiculoNS (NetworkStream NS)
+        //Método para leer de un NetworkStream los datos que de un objeto Vehiculo
+        public static Vehiculo LeerDatosVehiculoNS(NetworkStream NS)
         {
             string longitudStr = LeerMensajeNetworkStream(NS); // Read the length of the incoming data
             int longitud = int.Parse(longitudStr); // Parse the length into an integer
@@ -74,9 +71,8 @@ namespace NetworkStreamNS
                 totalLeido += leido; // Update the total number of bytes read
             }
 
-            MemoryStream ms = new MemoryStream(datos); // Create a MemoryStream with the read data
-            BinaryFormatter bf = new BinaryFormatter(); // Create a BinaryFormatter to deserialize the data
-            Vehiculo vehiculo = (Vehiculo)bf.Deserialize(ms); // Deserialize the MemoryStream back into a Vehiculo object
+            string json = Encoding.UTF8.GetString(datos); // Convert the byte array to a JSON string
+            Vehiculo vehiculo = JsonSerializer.Deserialize<Vehiculo>(json); // Deserialize the JSON string into a Vehiculo object
 
             return vehiculo; // Return the deserialized Vehiculo object
         }
@@ -106,7 +102,7 @@ namespace NetworkStreamNS
         }
 
         //Método que permite escribir un mensaje de tipo texto (string) al NetworkStream
-        public static void  EscribirMensajeNetworkStream(NetworkStream NS, string Str)
+        public static void EscribirMensajeNetworkStream(NetworkStream NS, string Str)
         {
             byte[] MensajeBytes = Encoding.Unicode.GetBytes(Str); // Encode the string into a byte array using Unicode
             NS.Write(MensajeBytes, 0, MensajeBytes.Length); // Write the byte array to the NetworkStream

@@ -23,7 +23,6 @@ namespace Client
                 client.Connect("127.0.0.1", 5000); // Connect to local server
                 Console.WriteLine("[Cliente] Connecting to the server...");
 
-                // I am already getting the network stream lol
                 NetworkStream ns = client.GetStream();
 
                 // 1) Send "INIT" to begin connection
@@ -41,6 +40,17 @@ namespace Client
                 // 4) Read final ACK
                 string finalAck = NetworkStreamClass.LeerMensajeNetworkStream(ns);
                 Console.WriteLine($"[Cliente] Handshake completed: {finalAck}");
+
+                // Now create a new Vehiculo with the received ID and bearing
+                var vehiculo = new Vehiculo
+                {
+                    Id = int.Parse(serverData.Split(",")[0].Split(":")[1].Trim()),
+                    Direccion = serverData.Split(",")[1].Split(":")[1].Trim()
+                };
+
+                // Send the Vehiculo back to the server
+                NetworkStreamClass.EscribirDatosVehiculoNS(ns, vehiculo);
+                Console.WriteLine("[Cliente] Sent new Vehiculo to the server.");
 
                 Console.WriteLine("Press enter to disconnect...");
                 Console.ReadLine();
