@@ -13,9 +13,3 @@ All clients must see the rest of vehicles on the road.
 
 Vehicles will drive the 100km at a speed provided by the server.
 
-## 🧮 Theory Questions
-
-## 📊 Drawings
-
-## 🚀 Screenshots
-
