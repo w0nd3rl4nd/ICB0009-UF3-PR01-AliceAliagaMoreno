@@ -41,6 +41,9 @@ namespace Client
                 string finalAck = NetworkStreamClass.LeerMensajeNetworkStream(ns);
                 Console.WriteLine($"[Cliente] Handshake completed: {finalAck}");
 
+                Console.WriteLine("Press enter to disconnect...");
+                Console.ReadLine();
+
                 ns.Close();
                 client.Close();
             }
