@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Net.Sockets;
-using System.Net;
-using System.Text;
-using System.IO;
 using System.Threading;
 using NetworkStreamNS;
-using CarreteraClass;
 using VehiculoClass;
+using System.Net;
 
 namespace Client
 {
@@ -15,7 +12,7 @@ namespace Client
         static void Main(string[] args)
         {
             Console.Clear();
-            Console.WriteLine("[Cliente] Initialising connection...");
+            Console.WriteLine("[Cliente] Initializing connection...");
 
             try
             {
@@ -52,6 +49,27 @@ namespace Client
                 NetworkStreamClass.EscribirDatosVehiculoNS(ns, vehiculo);
                 Console.WriteLine("[Cliente] Sent new Vehiculo to the server.");
 
+                // Start moving the vehicle
+                for (int i = 0; i <= 100; i++)
+                {
+                    // Update vehicle position
+                    vehiculo.Pos = i;
+                    // Simulate movement speed with Thread.Sleep based on Velocidad
+                    Thread.Sleep(vehiculo.Velocidad);
+
+                    // Send updated Vehiculo to server
+                    NetworkStreamClass.EscribirDatosVehiculoNS(ns, vehiculo);
+                    Console.WriteLine($"[Cliente] Vehicle updated: Pos = {vehiculo.Pos}, Vel = {vehiculo.Velocidad}");
+
+                    if (vehiculo.Pos == 100)
+                    {
+                        vehiculo.Acabado = true;
+                        Console.WriteLine("[Cliente] Vehicle has finished its journey.");
+                        break;
+                    }
+                }
+
+                // Wait for user input before disconnecting
                 Console.WriteLine("Press enter to disconnect...");
                 Console.ReadLine();
 

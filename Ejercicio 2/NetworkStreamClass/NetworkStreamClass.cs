@@ -38,10 +38,18 @@ namespace NetworkStreamNS
                 totalLeido += leido; // Update the total number of bytes read
             }
 
-            string json = Encoding.UTF8.GetString(datos); // Convert the byte array to a JSON string
-            Carretera carretera = JsonSerializer.Deserialize<Carretera>(json); // Deserialize the JSON string into a Carretera object
-
-            return carretera; // Return the deserialized Carretera object
+            // Ensure that the bytes read are complete and valid
+            string json = Encoding.UTF8.GetString(datos);
+            try
+            {
+                Carretera carretera = JsonSerializer.Deserialize<Carretera>(json); // Deserialize the JSON string into a Carretera object
+                return carretera;
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine($"[Servidor] Deserialization error: {ex.Message}");
+                return null; // Return null or handle error as needed
+            }
         }
 
         //Método para enviar datos de tipo Vehiculo en un NetworkStream
@@ -71,10 +79,18 @@ namespace NetworkStreamNS
                 totalLeido += leido; // Update the total number of bytes read
             }
 
-            string json = Encoding.UTF8.GetString(datos); // Convert the byte array to a JSON string
-            Vehiculo vehiculo = JsonSerializer.Deserialize<Vehiculo>(json); // Deserialize the JSON string into a Vehiculo object
-
-            return vehiculo; // Return the deserialized Vehiculo object
+            // Ensure that the bytes read are complete and valid
+            string json = Encoding.UTF8.GetString(datos);
+            try
+            {
+                Vehiculo vehiculo = JsonSerializer.Deserialize<Vehiculo>(json); // Deserialize the JSON string into a Vehiculo object
+                return vehiculo;
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine($"[Servidor] Deserialization error: {ex.Message}");
+                return null; // Return null or handle error as needed
+            }
         }
 
         //Método que permite leer un mensaje de tipo texto (string) de un NetworkStream

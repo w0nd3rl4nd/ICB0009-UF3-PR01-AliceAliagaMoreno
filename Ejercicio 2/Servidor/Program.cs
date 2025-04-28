@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Net;
-using System.IO;
 using System.Text;
 using System.Threading;
 using NetworkStreamNS;
@@ -82,8 +81,19 @@ namespace Servidor
                 carretera.AñadirVehiculo(vehiculo);
                 Console.WriteLine("[Servidor] Vehicle added to the carretera.");
 
-                // Display all vehicles in the carretera
-                carretera.MostrarBicicletas();
+                // Start listening for vehicle updates
+                while (!vehiculo.Acabado)
+                {
+                    // Read updated vehicle data from client
+                    vehiculo = NetworkStreamClass.LeerDatosVehiculoNS(ns);
+                    Console.WriteLine($"[Servidor] Vehicle updated: Pos = {vehiculo.Pos}, Vel = {vehiculo.Velocidad}");
+
+                    // Update vehicle data in the Carretera object
+                    carretera.ActualizarVehiculo(vehiculo);
+
+                    // Show the updated vehicles in the Carretera
+                    carretera.MostrarBicicletas();
+                }
 
                 // Clean up
                 var socket = client.Client;
