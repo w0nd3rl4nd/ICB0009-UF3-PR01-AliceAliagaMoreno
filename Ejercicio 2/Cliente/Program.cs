@@ -64,6 +64,7 @@ namespace Client
                     if (vehiculo.Pos == 100)
                     {
                         vehiculo.Acabado = true;
+                        NetworkStreamClass.EscribirDatosVehiculoNS(ns, vehiculo); // Send vehicle data one last time so server exits the while !Acabado loop
                         Console.WriteLine("[Cliente] Vehicle has finished its journey.");
                         break;
                     }

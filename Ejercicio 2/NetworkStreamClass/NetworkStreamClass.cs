@@ -5,6 +5,7 @@ using System.IO;
 using VehiculoClass;
 using CarreteraClass;
 using System.Text.Json;
+using System.Collections.Generic;
 
 namespace NetworkStreamNS
 {
@@ -96,31 +97,29 @@ namespace NetworkStreamNS
         //Método que permite leer un mensaje de tipo texto (string) de un NetworkStream
         public static string LeerMensajeNetworkStream(NetworkStream NS)
         {
-            byte[] bufferLectura = new byte[1024]; // Buffer to temporarily store data read from the stream
-            int bytesLeidos = 0; // Number of bytes read
+            // Modify this entire class because the method was unreliable
+            byte[] buffer = new byte[1]; // read byte per byte
+            List<byte> datos = new List<byte>();
 
-            using (MemoryStream tmpStream = new MemoryStream()) // Create a temporary MemoryStream to accumulate the read data
+            while (true)
             {
-                int bytes = NS.Read(bufferLectura, 0, bufferLectura.Length); // Read bytes from the stream
-                tmpStream.Write(bufferLectura, 0, bytes); // Write them to the MemoryStream
-                bytesLeidos += bytes; // Update the number of bytes read
+                int bytesRead = NS.Read(buffer, 0, 1);
+                if (bytesRead == 0)
+                    break; // closed connection
 
-                // Continue reading if more data is available
-                while (NS.DataAvailable)
-                {
-                    bytes = NS.Read(bufferLectura, 0, bufferLectura.Length); // Read additional bytes
-                    tmpStream.Write(bufferLectura, 0, bytes); // Append them to the MemoryStream
-                    bytesLeidos += bytes; // Update the number of bytes read
-                }
+                if (buffer[0] == '\n')
+                    break; // end of message
 
-                return Encoding.Unicode.GetString(tmpStream.ToArray(), 0, bytesLeidos); // Convert the accumulated bytes to a Unicode string
+                datos.Add(buffer[0]);
             }
+
+            return Encoding.UTF8.GetString(datos.ToArray()).Trim();
         }
 
         //Método que permite escribir un mensaje de tipo texto (string) al NetworkStream
         public static void EscribirMensajeNetworkStream(NetworkStream NS, string Str)
         {
-            byte[] MensajeBytes = Encoding.Unicode.GetBytes(Str); // Encode the string into a byte array using Unicode
+            byte[] MensajeBytes = Encoding.UTF8.GetBytes(Str + "\n"); // Encode the string into a byte array using UTF8
             NS.Write(MensajeBytes, 0, MensajeBytes.Length); // Write the byte array to the NetworkStream
         }                      
 
