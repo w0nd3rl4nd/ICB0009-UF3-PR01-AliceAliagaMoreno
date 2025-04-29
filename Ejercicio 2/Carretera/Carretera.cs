@@ -6,8 +6,8 @@ namespace CarreteraClass;
 [Serializable]
 public class Carretera
 {
-    public List<Vehiculo> VehiculosEnCarretera = new List<Vehiculo>();
-    public int NumVehiculosEnCarrera = 0;
+    public List<Vehiculo> VehiculosEnCarretera { get; set; } = new List<Vehiculo>();
+    public int NumVehiculosEnCarrera { get; set; } = 0;
 
     public Carretera ()
     {

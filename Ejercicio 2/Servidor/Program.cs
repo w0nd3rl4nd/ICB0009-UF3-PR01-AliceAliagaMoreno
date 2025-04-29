@@ -43,6 +43,8 @@ namespace Servidor
             int vehicleId = 0;
             string bearing = "";
 
+            Cliente cliente = null;
+
             try
             {
                 Console.WriteLine("[Servidor] Managing new vehicle...");
@@ -55,51 +57,57 @@ namespace Servidor
 
                 Console.WriteLine($"[Servidor] Vehicle with ID {vehicleId} is assigned {bearing} direction");
 
-                // 1) Read INIT from client
                 NetworkStream ns = client.GetStream();
+
+                // Crear objeto Cliente y añadirlo a la lista global
+                cliente = new Cliente
+                {
+                    Id = vehicleId,
+                    TcpClient = client,
+                    Stream = ns
+                };
+
+                lock (clientesLock)
+                {
+                    connectedClients.Add(cliente);
+                }
+
+                // Handshake
                 string init = NetworkStreamClass.LeerMensajeNetworkStream(ns);
                 Console.WriteLine($"[Servidor] Handshake received: {init}");
 
-                // 2) Send ID and bearing
                 string handshakeData = $"ID:{vehicleId}, Bearing:{bearing}";
                 NetworkStreamClass.EscribirMensajeNetworkStream(ns, handshakeData);
                 Console.WriteLine($"[Servidor] Sent handshake data: {handshakeData}");
 
-                // 3) Read ACK from client (message readback)
                 string confirm = NetworkStreamClass.LeerMensajeNetworkStream(ns);
                 Console.WriteLine($"[Servidor] Handshake confirmation: {confirm}");
 
-                // 4) Send final ACK
                 NetworkStreamClass.EscribirMensajeNetworkStream(ns, "HANDSHAKE_COMPLETED");
                 Console.WriteLine("[Servidor] Handshake completed");
 
-                // 5) Receive the new vehicle from client
+                // Recibir vehículo
                 Vehiculo vehiculo = NetworkStreamClass.LeerDatosVehiculoNS(ns);
                 Console.WriteLine($"[Servidor] Received Vehiculo with ID {vehiculo.Id}, Bearing {vehiculo.Direccion}");
 
-                // Add the received vehicle to the carretera
                 carretera.AñadirVehiculo(vehiculo);
                 Console.WriteLine("[Servidor] Vehicle added to the carretera.");
 
-                // Start listening for vehicle updates
+                // Ciclo de actualización
                 while (!vehiculo.Acabado)
                 {
-                    // Read updated vehicle data from client
                     vehiculo = NetworkStreamClass.LeerDatosVehiculoNS(ns);
                     Console.WriteLine($"[Servidor] Vehicle updated: Pos = {vehiculo.Pos}, Vel = {vehiculo.Velocidad}");
 
-                    // Update vehicle data in the Carretera object
                     carretera.ActualizarVehiculo(vehiculo);
-
-                    // Show the updated vehicles in the Carretera
+                    EnviarDatosACadaCliente();
                     carretera.MostrarBicicletas();
                 }
 
-                // Clean up
+                // Esperar desconexión
                 var socket = client.Client;
                 try
                 {
-                    // Detect disconnection
                     while (true)
                     {
                         if (socket.Poll(0, SelectMode.SelectRead) && socket.Available == 0)
@@ -109,6 +117,12 @@ namespace Servidor
                 }
                 finally
                 {
+                    // Quitar cliente de la lista
+                    lock (clientesLock)
+                    {
+                        connectedClients.Remove(cliente);
+                    }
+
                     ns.Close();
                     client.Close();
                     Console.WriteLine("[Servidor] Client disconnected.");
@@ -117,6 +131,35 @@ namespace Servidor
             catch (Exception ex)
             {
                 Console.WriteLine($"[Servidor] Error: {ex.Message}");
+
+                // En caso de error, asegurar eliminación del cliente
+                if (cliente != null)
+                {
+                    lock (clientesLock)
+                    {
+                        connectedClients.Remove(cliente);
+                    }
+                }
+            }
+        }
+
+        static void EnviarDatosACadaCliente()
+        {
+            lock (clientesLock)
+            {
+                foreach (var cliente in connectedClients)
+                {
+                    try
+                    {
+                        // Enviar los datos de la carretera a cada cliente
+                        NetworkStreamClass.EscribirDatosCarreteraNS(cliente.Stream, carretera);
+                        Console.WriteLine("[Servidor] Sending data to a client.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[Servidor] Error sending data: {ex.Message}");
+                    }
+                }
             }
         }
     }
