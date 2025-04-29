@@ -1,4 +1,4 @@
-# 🚦 ICB0009-UF3-PR01 - BRIDGE TRAFFIC SIMULATOR
+# 🚦 ICB0009-UF3-PR01 EXERCISE 1 - BRIDGE TRAFFIC SIMULATOR
 by Alice Aliaga Moreno
 
 ## 📋 Project Overview
